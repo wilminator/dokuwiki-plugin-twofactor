@@ -19,8 +19,10 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 
 	public function __construct() {
 		$this->loadConfig();
-		// Load the attribute helper if GA is active with no server secret or not using email to send the OTP.
-		$requireAttribute = ($this->getConf("gaenable") === 1 || $this->getConf("gasecret") != '') || ($this->getConf("otpenable") === 1 || $this->getConf("otpmethod") != 'email');		
+		// Load the attribute helper if GA is active or not requiring use of email to send the OTP.
+		$requireAttribute = $this->getConf("enable") === 1 && 
+			($this->getConf("usega") === 1 || 
+			($this->getConf("useotp") === 1 && ($this->getConf("otpmethod") != 'email' || $this->getConf("optinout") != 'mandatory')));
 		$this->attribute = $requireAttribute ? $this->loadHelper('attribute', 'Attribute plugin required!') : null;		
 		$this->success = !$requireAttribute || ($this->attribute && $this->attribute->success);
 
@@ -72,7 +74,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
      */
     function twofactor_profile_form(&$event, $param) {
 		$optinout = $this->getConf("optinout");
-		$optstate = $this->attribute->get("twofactor","state");
+		$optstate = $optinout == 'mandatory' ? 'in' : ($this->attribute ? $this->attribute->get("twofactor","state") : '');
 		$gaavailable = $this->getConf("usega") === 1 && $this->attribute->exists("twofactor","seenqrcode");
 		$otpmethod = $this->getConf("otpmethod");
 		$otpenabled = $this->getConf("useotp") === 1;
@@ -88,16 +90,16 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		$pos = $event->data->findElementByAttribute('type', 'submit') - 1;
 		// Add the checkbox to opt in and out, only if optinout is not mandatory.
 		if ($this->getConf("optinout") != 'mandatory') {
-			$value = $this->attribute->get("twofactor","state", $success);
-			if (!$success) {  // If there is no personal setting for optin, the default is based on the wiki default.
+			$value = $optstate;
+			if (!$this->attribute || !$value) {  // If there is no personal setting for optin, the default is based on the wiki default.
 				$value = $this->getConf("optinout") == 'optout';
 			}
-			$twofa_form = form_makeCheckboxField('optinout', $value='1', $this->getLang('twofactor_optin'), '', '', $value?array('checked'=>'checked'):array());
+			$twofa_form = form_makeCheckboxField('optinout', '1', $this->getLang('twofactor_optin'), '', '', $value=='in'?array('checked'=>'checked'):array());
 			$event->data->insertElement($pos++, $twofa_form);
 			$event->data->insertElement($pos++, '<br />');
 		}
 		// Add the image and prompt to use GA if available, or the check to undo personal GA if in use.
-		if ($this->getConf("usega") == 1) {
+		if ($optstate == 'in' && $this->getConf("usega") == 1) {			
 			$ga = new PHPGangsta_GoogleAuthenticator();			
 			if ($this->attribute->exists("twofactor","secret")) { // The user has a revokable GA secret.
 				// Show the QR code so the user can add other devices.
@@ -113,7 +115,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 					$event->data->insertElement($pos++, $twofa_form);
 				}
 				// Show the option to revoke the GA secret.
-				$twofa_form = form_makeCheckboxField('killgasecret', $value='1', $this->getLang('twofactor_killgasecret'));
+				$twofa_form = form_makeCheckboxField('killgasecret', '1', $this->getLang('twofactor_killgasecret'));
 				$event->data->insertElement($pos++, $twofa_form);
 				$event->data->insertElement($pos++, '<br />');
 			}
@@ -135,13 +137,13 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 				}
 				else { // The user can generate a personal secret; no system secret exists.
 					//Provide a checkbox to create a personal secret.
-					$twofa_form = form_makeCheckboxField('makegasecret', $value='1', $this->getLang('twofactor_makegasecret'));
+					$twofa_form = form_makeCheckboxField('makegasecret', '1', $this->getLang('twofactor_makegasecret'));
 					$event->data->insertElement($pos++, $twofa_form);
 				}
 			}
 		}
 		// Verify phone number if used.
-		if ($this->getConf("useotp") === 1 && $this->getConf("otpmethod") != 'email') {
+		if ($optstate == 'in' && $this->getConf("useotp") === 1 && $this->getConf("otpmethod") != 'email') {
 			// Provide an input for the phone number.
 			$twofa_form = form_makeTextField('phone', $this->attribute->get("twofactor","phone"), $this->getLang('twofactor_phone'), '', 'block', array('size'=>'50'));
 			$event->data->insertElement($pos++, $twofa_form);
@@ -215,8 +217,10 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
      * If the conditions are right, process any updates to this module's attributes.
      */
     function twofactor_process_changes(&$event, $param) {
+		// If the plugin is disabled, then exit.
+		if ($this->getConf("enable") !== 1 || !$this->success) { return; }
 		// If this is a modify event that succeeded, we are ok.
-		if ($event->data['type'] == 'modify' && in_array($event->data['modification_result'], array(true, 0)) && $this->modifyProfile) {
+		if ($event->data['type'] == 'modify' && in_array($event->data['modification_result'], array(true, 1)) && $this->modifyProfile) {
 			$changed = false;
 			global $INPUT, $USERINFO;
 			// Process opt in/out.
@@ -259,7 +263,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 							msg("TwoFactor: Error setting secret.", -1);
 						}
 						else {
-							msg($this->getLang('twofactor_passedgasetup'), 0);
+							msg($this->getLang('twofactor_passedgasetup'), 1);
 							// If the user was not granted clearance before, do that now and redirect to 'show'.
 							if (!$this->twofactor_getClearance()) {
 								$this->twofactor_grantClearance();
@@ -294,11 +298,11 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 
 			// Update change status if changed.
 			if ($changed) {
-				$event->data['modification_result'] = 1;
-				msg($this->getLang('twofactor_updated'), 0);
+				msg($this->getLang('twofactor_updated'), 1);
+				// TODO: get the profile page to return if any two factor changes are made.
 			}
 		}
-		return true;
+		return ;
 	}
 
     /**
@@ -395,7 +399,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		if ($ACT == 'logout') { return; }
 
 		$optinout = $this->getConf("optinout");
-		$optstate = $this->attribute->get("twofactor","state");
+		$optstate = $this->attribute ? $this->attribute->get("twofactor","state") : '';
 		$gaavailable = $this->getConf("usega") === 1 && $this->attribute->exists("twofactor","seenqrcode");
 		$otpmethod = $this->getConf("otpmethod");
 		$otpenabled = $this->getConf("useotp") === 1;
@@ -468,7 +472,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		
 		// Setup some availability variables.
 		$optinout = $this->getConf("optinout");
-		$optstate = $this->attribute->get("twofactor","state");
+		$optstate = $this->attribute ? $this->attribute->get("twofactor","state") : '';
 		$gaavailable = $this->getConf("usega") === 1 && $this->attribute->exists("twofactor","seenqrcode");
 		$otpmethod = $this->getConf("otpmethod");
 		$otpenabled = $this->getConf("useotp") === 1;
