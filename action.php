@@ -623,11 +623,11 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
     function twofactor_getProviders() {
 		$filename = dirname(__FILE__).'/gateway.txt';
 		$providers = array();
-		$contents = explode('\n', io_readFile($filename));
+		$contents = explode("\n", io_readFile($filename));		
 		foreach($contents as $line) {
-			if (strstr($contents, '@')) {
-			list($provider, $domain) = explode("@", trim($line), 2);
-			$providers[$provider] = $domain;
+			if (strstr($line, '@')) {
+				list($provider, $domain) = explode("@", trim($line), 2);
+				$providers[$provider] = $domain;
 			}
 		}
 		return $providers;
