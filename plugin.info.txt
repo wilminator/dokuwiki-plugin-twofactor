@@ -1,0 +1,7 @@
+base   twofactor
+author Mike Wilmes
+email  mwilmes@avc.edu
+date   2015-08-25
+name   Two Factor Authentication Plugin
+desc   Creates a two factor authentication mechanism
+url    http://www.dokuwiki.org/plugin:twofactor
