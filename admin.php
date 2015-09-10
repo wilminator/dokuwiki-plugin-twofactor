@@ -40,9 +40,7 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
             $this->_auth = & $auth;
         }
 		$this->setupLocale();
-		$requireAttribute = $this->getConf("enable") === 1 && 
-			($this->getConf("usega") === 1 || 
-			($this->getConf("useotp") === 1 && ($this->getConf("otpmethod") != 'email' || $this->getConf("optinout") != 'mandatory')));
+		$requireAttribute = $this->getConf("enable") === 1;
 		$this->attribute = $requireAttribute ? $this->loadHelper('attribute', 'Attribute plugin required!') : null;		
 		$this->_getUsers();
     }
