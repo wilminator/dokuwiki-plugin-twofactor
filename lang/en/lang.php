@@ -16,6 +16,11 @@ $lang['twofactor_updated'] = "Two factor configuration updated.";
 $lang['twofactor_gaready'] = "Google Authenticator is configured.";
 $lang['twofactor_otplogin'] = "Verification Code";
 $lang['twofactor_mandatory'] = "This wiki requires the use of two factor authentication.  You must configure either Google Authenticator or your text-capable cell number to continue.";
+$lang['twofactor_smsnotice'] = "A verification one-time password has been sent to your device.  If you do not receive it within 2 minutes, verify your settings and resend the code.  If you still do not get your code, please contact a wiki administrator.";
+$lang['twofactor_failedsmssetup'] = "The code provided is incorrect.  Use of one-time password is not enabled for this account.";
+$lang['twofactor_passedsmssetup'] = "Use of one-time password is now enabled for this account.";
+$lang['twofactor_killsms'] = "Disable one-time passwords to your device";
+
 $lang['btn_submit'] = "Submit";
 $lang['btn_resend'] = "Resend Code";
 $lang['btn_quit'] = "Quit";

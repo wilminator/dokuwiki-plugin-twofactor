@@ -5,7 +5,28 @@ if (!defined('DOKU_INC')) die();
  * Two Factor Action Plugin
  *
  * @author Mike Wilmes mwilmes@avc.edu
- * Big thanks to Daniel Popp and his Google 2FA code (authgoogle2fa) as a starting reference.
+ * Big thanks to Daniel Popp and his Google 2FA code (authgoogle2fa) as a 
+ * starting reference.
+ *
+ * Overview:
+ * The plugin provides for two opportunities to perform two factor 
+ * authentication. The first is on the main login page, via a code provided by 
+ * an external authenticator. The second is at a separate prompt after the 
+ * initial login. By default, all modules will process from the second login,
+ * but a module can subscribe to accepting a password from the main login when
+ * it makes sense, because the user has access to the code in advance.
+ * 
+ * If a user only has configured modules that provide for login at the main 
+ * screen, the code will only be accepted at the main login screen for 
+ * security purposes.
+ *
+ * Modules will be called to render their configuration forms on the profile 
+ * page and to verify a user's submitted code. If any module accepts the 
+ * submitted code, then the user is granted access.
+ *
+ * Each module may be used to transmit a message to the user that their 
+ * account has been logged into. One module may be used as the default 
+ * transmit option. These options are handled by the parent module.
  */
 
 // Load the PHPGangsta_GoogleAuthenticator Class
@@ -651,11 +672,9 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			$mail = new Mailer();
 			$subject = $conf['title'].' login verification';
 			$mail->to($to);
-			$mail->cc('mwilmes@avc.edu');
 			$mail->subject($subject);
 			$mail->setText($message);			
 			$result = $mail->send();
-			msg($message, 0);
 		}
 		// Store the OTP code and the timestamp the OTP expires at.
 		$this->attribute->set("twofactor","otp", array($otp, time() + $this->getConf('otpexpiry') * 60));

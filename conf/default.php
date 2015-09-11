@@ -1,5 +1,5 @@
 <?php
-$conf["enable"] = 1;
+$conf["enable"] = 0;
 $conf["optinout"] = 'optin';
 $conf["usega"] = 0;
 $conf["gasecret"] = '';
