@@ -21,10 +21,6 @@ Another big thanks to Christopher Smith and the developers that worked on the
 User Manager pluginUser Manager Plugin. I used their admin code as the basis 
 for my plugin and have to give them credit for their work that I used.
 
-I make use of the PHP Gangsta Google Authenticator class by 
-Michael Kliewe (BSD) and the PHP QR Code library (LGPL3). My thanks to them 
-for enabling this plugin to be a reality.
-
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; version 2 of the License
