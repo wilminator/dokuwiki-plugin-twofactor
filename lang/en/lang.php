@@ -1,29 +1,27 @@
 <?php
 $lang['twofactor_login'] = "Two Factor Authentication Token<br />(leave blank if not using)<br />";
 $lang['twofactor_optin'] = "Use two factor authentication";
-$lang['twofactor_makegasecret'] = "Use Google Authenticator";
-$lang['twofactor_killgasecret'] = "Revoke Google Authenticator";
-$lang['twofactor_phone'] = "Cellphone Number";
+$lang['phone'] = "Cellphone Number";
 $lang['twofactor_provider'] = "Cell Provider";
-$lang['twofactor_mustusega'] = "This wiki requires the use of Google Authenticator to login.";
+$lang['mustusetoken'] = "This wiki requires the use of a token provider such as Google Authenticator to login.";
 $lang['twofactor_invalidotp'] = "The code supplied is incorrect or expired.  Please try again. If needed, click the link to resend your code.";
-$lang['twofactor_failedgasetup'] = "The code provided did not work.  Google Authenticator is not enabled for this account.";
-$lang['twofactor_passedgasetup'] = "Google Authenticator is now enabled for this account.";
-$lang['twofactor_scanwithga'] = "Scan with Google Authenticator";
-$lang['twofactor_verifyga'] = "You need to verify that Google Authenticator is working.";
-$lang['twofactor_codefromga'] = "Enter code from Google Authenticator";
-$lang['twofactor_updated'] = "Two factor configuration updated.";
-$lang['twofactor_gaready'] = "Google Authenticator is configured.";
+$lang['updated'] = "Two factor configuration updated.";
 $lang['twofactor_otplogin'] = "Verification Code";
-$lang['twofactor_mandatory'] = "This wiki requires the use of two factor authentication.  You must configure either Google Authenticator or your text-capable cell number to continue.";
+$lang['mandatory'] = "This wiki requires the use of two factor authentication.  You must configure at least one form of two factor authentication to continue.";
 $lang['twofactor_smsnotice'] = "A verification one-time password has been sent to your device.  If you do not receive it within 2 minutes, verify your settings and resend the code.  If you still do not get your code, please contact a wiki administrator.";
 $lang['twofactor_failedsmssetup'] = "The code provided is incorrect.  Use of one-time password is not enabled for this account.";
 $lang['twofactor_passedsmssetup'] = "Use of one-time password is now enabled for this account.";
 $lang['twofactor_killsms'] = "Disable one-time passwords to your device";
+$lang['twofactor_useallmods'] = "Resend OTP using all configured options";
+$lang['defaultmodule'] = "Default way to receive a code";
+$lang['useallotp'] = "*Use All*";
+$lang['verify_password'] = "Confirm your password";
+$lang['btn_twofactor_profile'] = 'Twofactor Settings';
 
-$lang['btn_submit'] = "Submit";
+$lang['btn_login'] = "Complete Login";
 $lang['btn_resend'] = "Resend Code";
 $lang['btn_quit'] = "Quit";
+$lang['btn_return'] = "Return to content";
 
 $lang['menu'] = 'TwoFactor Admin';
 $lang['noauth']      = '(user authentication not available)';

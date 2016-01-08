@@ -30,4 +30,12 @@
 #user__manager .import_failures td.lineno {
   text-align: center;
 }
+
+#dokuwiki__usertools a.action.twofactor_profile {
+  background-position: left -32px;
+}
+
+[dir=rtl] #dokuwiki__usertools a.action.twofactor_profile {
+  background-position: right -32px;
+}
 /* IE won't understand but doesn't require it */

@@ -1,13 +1,9 @@
 <?php
 $conf["enable"] = 0;
 $conf["optinout"] = 'optin';
-$conf["usega"] = 0;
-$conf["gasecret"] = '';
-$conf["gaexpiry"] = 2;
-$conf["useotp"] = 1;
-$conf["otpmethod"] = 'email';
-$conf["otpurl"] = '';
 $conf["otpcontent"] = '$otp is your verification code.';
+$conf["generatorexpiry"] = 2;
 $conf["otplength"] = 7;
-$conf["otpexpiry"] = 5;
+$conf["sentexpiry"] = 5;
+$conf["loginnotice"] = 'user';
 

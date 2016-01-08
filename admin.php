@@ -42,6 +42,14 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
 		$this->setupLocale();
 		$requireAttribute = $this->getConf("enable") === 1;
 		$this->attribute = $requireAttribute ? $this->loadHelper('attribute', 'Attribute plugin required!') : null;		
+		
+		$available = Twofactor_Auth_Module::_listModules();		
+		$allmodules = Twofactor_Auth_Module::_loadModules($available);
+		$failed = array_diff($available, array_keys($allmodules));
+		if (count($failed) > 0) {
+			msg('At least one loaded module did not have a properly named class.' . ' ' . implode(', ', $failed), -1);
+		}
+		$this->modules = &$allmodules;
 		$this->_getUsers();
     }
 	
@@ -342,7 +350,11 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
 		$count = 0;
 		foreach($selected as $user) {
 			// All users here have a attribute namespace file. Purge them.
-			$count += $this->attribute->purge('twofactor', $user)? 1 : 0;
+			$purged = $this->attribute->purge('twofactor', $user);
+			foreach($this->modules as $mod) {
+				$purged |= $this->attribute->purge($mod->moduleName, $user);
+			}
+			$count += $purged ? 1 : 0;
 		}
 
         if ($count == count($selected)) {
