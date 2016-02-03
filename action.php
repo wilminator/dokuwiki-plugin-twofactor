@@ -75,7 +75,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
     /**
      * Registers the event handlers.
      */
-    public function register(&$controller)
+    public function register(Doku_Event_Handler $controller)
     {
         if($this->getConf("enable") === 1 && $this->success) {
 			$firstlogin = false;
