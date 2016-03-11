@@ -64,8 +64,8 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 	public function getInfo(){
 		return array(
             'author' => 'Mike Wilmes',
-            'email'  => 'mwilmes@avc.edu',
-            'date'   => '2015-09-04',
+            'email'  => 'mwilmes@wilminator.com',
+            'date'   => '2015-09-10',
             'name'   => 'TwoFactor Plugin',
             'desc'   => 'This plugin provides for two factor authentication using extensible modules.',
             'url'    => 'http://www.dokuwiki.org/plugin:twofactor',
@@ -87,22 +87,15 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			}
 			// Adds our twofactor profile to the user tools.
             $controller->register_hook('TEMPLATE_USERTOOLS_DISPLAY', 'BEFORE', $this, 'twofactor_usertools_action', array());
-			// Provide user settings in profile.
-            //$controller->register_hook('HTML_UPDATEPROFILEFORM_OUTPUT', 'BEFORE', $this, 'twofactor_profile_form', array());
-			// Ensures we are in the user profile.
 			// Manage action flow around the twofactor authentication requirements.
             $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'twofactor_action_process_handler', array());
 			// Handle the twofactor login and profile actions.
             $controller->register_hook('TPL_ACT_UNKNOWN', 'BEFORE', $this, 'twofactor_handle_unknown_action', array());
             $controller->register_hook('TPL_ACTION_GET', 'BEFORE', $this, 'twofactor_get_unknown_action', array());
-			// Updates user settings. Ensures that the settings ceom from the profile using a flag passed by the above hook.
-            $controller->register_hook('AUTH_USER_CHANGE', 'BEFORE', $this, 'twofactor_process_changes', array());
 			// If the user supplies a token code at login, checks it before logging the user in.
 			$controller->register_hook('AUTH_LOGIN_CHECK', 'BEFORE', $this, 'twofactor_before_auth_check', array());
 			// Atempts to process the second login if the user hasn't done so already.
 			$controller->register_hook('AUTH_LOGIN_CHECK', 'AFTER', $this, 'twofactor_after_auth_check', array());
-            // Ensures the user has passed the second login after logged in or displays a challenge screen.
-			//$controller->register_hook('TPL_CONTENT_DISPLAY', 'BEFORE', $this, 'twofactor_prompt_otp', array());TEMPLATE_' . strtoupper($toolsname) . '_DISPLAY
         }
     }
 	
