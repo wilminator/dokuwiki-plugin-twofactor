@@ -42,7 +42,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		$this->loadConfig();
 		// Load the attribute helper if GA is active or not requiring use of email to send the OTP.
 		$requireAttribute = $this->getConf("enable") === 1;
-		$this->attribute = $requireAttribute ? $this->loadHelper('attribute', 'Attribute plugin required!') : null;		
+		$this->attribute = $requireAttribute ? $this->loadHelper('attribute', 'TwoFactor depends on the Attribute plugin, but the Attribute plugin is not installed!') : null;		
 		
 		// Now figure out what modules to load and load them.				
 		$available = Twofactor_Auth_Module::_listModules();		
@@ -641,7 +641,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Transmits a One-Time Password (OTP) configured modules.
+     * Transmits a One-Time Password (OTP) using configured modules.
      * If $module is set to a specific instance, that instance will be used to 
 	 * send the OTP. If not supplied or null, then all configured modules will 
 	 * be used to send the OTP. $module can allso be an array of selected 
@@ -655,11 +655,12 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			$module = $this->otpMods;
 		}
 		if (!is_array($module)) {
-			$modname = get_class($module);
 			$module = array($module);
 		}		
-		if (count($module)==1) {			
-			$modname = get_class($module[array_keys($module)[0]]);			
+		if (count($module)>=1) {
+			$modulekeys = array_keys($module);
+			$modulekey = $modulekeys[0];
+			$modname = get_class($module[$modulekey]);			
 		} 
 		else {
 			$modname = null;
@@ -675,9 +676,13 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		$message = str_replace('$otp', $otp, $this->getConf('otpcontent'));
 		// Pick the delivery method.
 		$success = 0;
+		$modname = array();
 		foreach($module as $mod) {
 			if ($mod->canTransmitMessage()) {
-				$success += $mod->transmitMessage($message, $force) ? 1 : 0;
+				if ($mod->transmitMessage($message, $force)) {
+					$success += 1;
+					$modname[] = get_class($mod);
+				}				
 			}
 		}
 		
@@ -688,9 +693,14 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 				msg("Unable to record OTP for later use.", -1);
 			}
 		}
-		return $success == 0 ? false : ($success == count($mod) ? true : $success);
+		return $success == 0 ? false : ($success == count($module) ? true : $success);
 	}
 	
+    /**
+     * Returns the OTP code sent to the user, if it has not expired.
+     * @return mixed - false if there is no unexpired OTP, otherwise
+	 *     array of the OTP and the modules that successfully sent it.
+     */
 	public function get_otp_code() {
 		$otpQuery = $this->attribute->get("twofactor","otp", $success);		
 		if (!$success) { return false; }

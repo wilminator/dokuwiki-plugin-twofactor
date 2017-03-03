@@ -155,7 +155,7 @@ abstract class Twofactor_Auth_Module extends DokuWiki_Plugin {
 		//msg(serialize(array($otpQuery,$code, $user)));
 		if (!$otpQuery) { return false; }
 		list($otp, $modname) = $otpQuery;
-		return ($code == $otp && $code != '' && ($modname == null || $modname == get_called_class()));
+		return ($code == $otp && $code != '' && (count($modname) == 0 || in_array(get_called_class(), $modname));
 	}
 	
 	/**

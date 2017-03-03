@@ -44,4 +44,4 @@ $lang['summary']     = 'Displaying users %1$d-%2$d of %3$d found. %4$d users tot
 $lang['nonefound']   = 'No users found. %d users total.';
 $lang['reset_ok']   = '%d users reset';
 $lang['reset_not_self']   = "You can't reset yourself.";
-$lang['no_purpose']   = "You do not have the twofactor plugin configured to store user-bound data, so there is nothing to administer.";
+$lang['no_purpose']   = "The TwoFactor plugin depends on the Attribute helper plugin being installed. Without the Attrubute plugin, TwoFactor cannot store data and will not function.";

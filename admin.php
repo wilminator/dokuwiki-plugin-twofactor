@@ -41,7 +41,7 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
         }
 		$this->setupLocale();
 		$requireAttribute = $this->getConf("enable") === 1;
-		$this->attribute = $requireAttribute ? $this->loadHelper('attribute', 'Attribute plugin required!') : null;		
+		$this->attribute = $requireAttribute ? $this->loadHelper('attribute', 'TwoFactor depends on the Attribute plugin, but the Attribute plugin is not installed!') : null;		
 		
 		$available = Twofactor_Auth_Module::_listModules();		
 		$allmodules = Twofactor_Auth_Module::_loadModules($available);
