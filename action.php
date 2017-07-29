@@ -244,8 +244,11 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			// Otherwise handle the action.
 			return;
 		}		
+
+		// See if this user has any OTP methods configured.
+		$available = count($this->tokenMods) + count($this->otpMods) > 0;
 		// Handle mandatory authentication.
-		if ($this->getConf("optinout") == 'mandatory') {
+		if ($this->getConf("optinout") == 'mandatory' || $available) {
 			// Enforce login.
 			if (!$this->get_clearance()) {			
 				if (!in_array($event->data, array('login','twofactor_login'))) {
@@ -261,7 +264,6 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 				return;
 			}
 			// Check to see if updating twofactor is needed.
-			$available = count($this->tokenMods) + count($this->otpMods) > 0;
 			if (!$available) {
 				//die( "mandatory in action process handler".$event->data.serialize($useable));
 				// We need to be going to the twofactor profile.
