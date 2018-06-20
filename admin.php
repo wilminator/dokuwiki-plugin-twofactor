@@ -68,13 +68,15 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
 	}
 	
 	protected function _getUsers() {
-		if (!is_null($this->attribute)) {
-			$attr = $this->attribute;
-			$this->_user_list = $this->attribute->enumerateUsers('twofactor');
-		}
-		else {
-			msg($this->lang['no_purpose'], -1);
-		}
+        if ($this->getConf("enable") === 1) {
+            if (!is_null($this->attribute)) {
+                $attr = $this->attribute;
+                $this->_user_list = $this->attribute->enumerateUsers('twofactor');
+            }
+            else {
+                msg($this->lang['no_purpose'], -1);
+            }
+        }
 	}
 	
     /**
