@@ -23,7 +23,7 @@ abstract class Twofactor_Auth_Module extends DokuWiki_Plugin {
         return array(
             'author' => 'Mike Wilmes',
             'email'  => 'mwilmes@avc.edu',
-            'date'   => '2015-09-03',
+            'date'   => '2018-06-21',
             'name'   => 'Twofactor Auth Plugin',
             'desc'   => 'Template object used to create Twofactor Authentication modules.',
             'url'    => 'http://www.dokuwiki.org/plugin:twofactor',

@@ -60,7 +60,7 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
 		return array(
             'author' => 'Mike Wilmes',
             'email'  => 'mwilmes@wilminator.com',
-            'date'   => '2015-09-10',
+            'date'   => '2018-06-21',
             'name'   => 'TwoFactor Plugin',
             'desc'   => 'This plugin provides for two factor authentication using either Google Authenticator or one time passwords sent by email or SMS appliance.',
             'url'    => 'http://www.dokuwiki.org/plugin:twofactor',
