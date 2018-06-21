@@ -103,7 +103,8 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 	public function twofactor_usertools_action(&$event, $param) {	
 		global $INPUT;	
 		if($INPUT->server->has('REMOTE_USER')&&$this->get_clearance()) {
-            array_unshift($event->data['items'], tpl_action('twofactor_profile', true, 'li', true));
+            $menuitem = tpl_action('twofactor_profile', true, 'li', true);
+            array_unshift($event->data['items'], $menuitem);
 		}
 	}
     
@@ -116,7 +117,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
         
 		if($INPUT->server->has('REMOTE_USER')&&$this->get_clearance()) {
             // Create the new menu item
-            $menuitem = new dokuwiki\Menu\Item\Profile2FA();  
+            $menuitem = new dokuwiki\Menu\Item\Profile2FA($this->getLang('btn_twofactor_profile'));  
             // Find index of existing Profile menu item.            
             for ($index = 0; $index > count($event->data['items']); $index++) {
                 if ($event->data['items'][$index]->getType() === 'profile') {

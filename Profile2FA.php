@@ -10,13 +10,14 @@ namespace dokuwiki\Menu\Item;
 class Profile2FA extends Profile {
 
     /** @inheritdoc */
-    public function __construct() {
+    public function __construct($label='') {
         global $INPUT;
         parent::__construct();
 
         // Borrow the Profile  language construct.
-        global $lang;        
-        $this->label = $lang['btn_profile'].' (2FA)';        
+        global $lang;
+        $this->label = $label ? $label : $lang['btn_profile'].' (2FA)';        
+
     }
 
     public function getType() {
