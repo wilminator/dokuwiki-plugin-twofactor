@@ -251,6 +251,12 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		}
 		// Check to see if we are heading to the twofactor login.
 		if ($event->data == 'twofactor_login') {
+            // Check if we already have clearance- just in case.
+            if ($this->get_clearance()) {
+                // Okay, this continues on with normal processing.
+				return;
+            }
+			//die( "twofactor_profile in action process handler".$event->data);
 			// We will be handling this action's permissions here.
 			$event->preventDefault();
 			$event->stopPropagation();
@@ -283,6 +289,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			}
 			// Check to see if updating twofactor is needed.
 			if (!$available) {
+				//die( "mandatory in action process handler".$event->data.serialize($useable));
 				// We need to be going to the twofactor profile.
 				// If we were, we would not be here in the code.
 				$event->preventDefault();
@@ -332,12 +339,16 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
      */
     private function _logout() {
 		if ($this->attribute) {
+            // Purge outstanding OTPs.
 			$this->attribute->del("twofactor","otp");
+            // Purge session ID relation.
+            $this->attribute->del("twofactor","id");
 		}
 		// Before we get here, the session is closed. Reopen it to logout the user.
 		if (!headers_sent()) {
 			$session = session_status() != PHP_SESSION_NONE;
 			if (!$session) { session_start(); }
+			//$_SESSION[DOKU_COOKIE]['twofactor_clearance'] = false;
 			unset($_SESSION[DOKU_COOKIE]['twofactor_clearance']);
 			if (!$session) { session_write_close(); }
 		}
@@ -352,7 +363,14 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
      *      authentication.
      */
     public function get_clearance() {
-		return isset($_SESSION[DOKU_COOKIE]['twofactor_clearance']) && $_SESSION[DOKU_COOKIE]['twofactor_clearance'] === true;
+		$clearance = isset($_SESSION[DOKU_COOKIE]['twofactor_clearance']) && $_SESSION[DOKU_COOKIE]['twofactor_clearance'] === true;
+        if (!$clearance) {
+            $clearance = $this->attribute->get("twofactor","id") === session_id();
+            if ($clearance) {
+                $_SESSION[DOKU_COOKIE]['twofactor_clearance'] === true;
+            }
+        }
+		return $clearance;
 	}
 
     /**
@@ -362,6 +380,9 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
     private function _grant_clearance() {
 		// Purge the otp code as a security measure.
 		$this->attribute->del("twofactor","otp");
+        // Storing the session id in case the session cache purges.
+        // This appears to not change if using cookie reauthorization.
+        $this->attribute->set("twofactor","id",session_id());
 		if (!headers_sent()) {
 			$session = session_status() != PHP_SESSION_NONE;
 			if (!$session) { session_start(); }
@@ -603,6 +624,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
      */
     function twofactor_otp_login(&$event, $param) {
 		// Skip this if not logged in or already two factor authenticated.
+
 		// Ensure the OTP exists and is still valid. If we need to, send a OTP.
 		$otpQuery = $this->get_otp_code();
 		if ($otpQuery == false) {
