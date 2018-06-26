@@ -31,6 +31,7 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
      */
     public function __construct(){
 		global $auth;
+		$this->setupLocale();
         if (!isset($auth)) {
             $this->_disabled = $this->lang['noauth'];
         } else if (!$auth->canDo('getUsers')) {
@@ -39,7 +40,6 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
             // we're good to go
             $this->_auth = & $auth;
         }
-		$this->setupLocale();
 		$requireAttribute = $this->getConf("enable") === 1;
 		$this->attribute = $requireAttribute ? $this->loadHelper('attribute', 'TwoFactor depends on the Attribute plugin, but the Attribute plugin is not installed!') : null;		
 		
