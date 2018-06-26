@@ -64,7 +64,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		return array(
             'author' => 'Mike Wilmes',
             'email'  => 'mwilmes@wilminator.com',
-            'date'   => '2018-06-21',
+            'date'   => '2018-06-26',
             'name'   => 'TwoFactor Plugin',
             'desc'   => 'This plugin provides for two factor authentication using extensible modules.',
             'url'    => 'http://www.dokuwiki.org/plugin:twofactor',

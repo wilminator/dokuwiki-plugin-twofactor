@@ -60,7 +60,7 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
 		return array(
             'author' => 'Mike Wilmes',
             'email'  => 'mwilmes@wilminator.com',
-            'date'   => '2018-06-21',
+            'date'   => '2018-06-26',
             'name'   => 'TwoFactor Plugin',
             'desc'   => 'This plugin provides for two factor authentication using either Google Authenticator or one time passwords sent by email or SMS appliance.',
             'url'    => 'http://www.dokuwiki.org/plugin:twofactor',
@@ -131,6 +131,10 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
     public function handle() {
         global $INPUT, $INFO;
         if (!$INFO['isadmin']) return false;
+        if ($this->_disabled) {
+            // If disabled, don't process anything.
+            return true;
+        }
 
         // extract the command and any specific parameters
         // submit button name is of the form - fn[cmd][param(s)]
@@ -180,6 +184,11 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
         if(!$INFO['isadmin']) {
             print $this->lang['badauth'];
             return false;
+        }
+        
+        if ($this->disabled !== '') {
+            msg($this->_disabled, -1);
+            return true;
         }
 
         $user_list = $this->_retrieveUsers($this->_start, $this->_pagesize, $this->_filter);

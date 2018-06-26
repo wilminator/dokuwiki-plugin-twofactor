@@ -24,8 +24,8 @@ $lang['btn_quit'] = "Quit";
 $lang['btn_return'] = "Return to content";
 
 $lang['menu'] = 'TwoFactor Admin';
-$lang['noauth']      = '(user authentication not available)';
-$lang['nosupport']   = '(user management not supported)';
+$lang['noauth']      = 'Unable to administer TwoFactor: User authentication module not available.';
+$lang['nosupport']   = 'Unable to administer TwoFactor: User management not supported via authentication module.';
 $lang['badauth']     = 'invalid auth mechanism';     // should never be displayed!
 $lang['user_id']     = 'User';
 $lang['user_pass']   = 'Password';
