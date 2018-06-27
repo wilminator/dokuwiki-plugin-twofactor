@@ -1,0 +1,47 @@
+<?php
+$lang['twofactor_login'] = "Jeton d'authentification 2FA <br />(laissez vide si inutilisé)<br />";
+$lang['twofactor_optin'] = "Utiliser la double authentification";
+$lang['phone'] = "Numéro de téléphone mobile";
+$lang['twofactor_provider'] = "Opérateur de téléphonie mobile";
+$lang['mustusetoken'] = "Ce wiki requiert l'utilisation d'un fournisseur de jeton d'authentification comme Google Authentificator pour s'identifier.";
+$lang['twofactor_invalidotp'] = "Le code fourni est incorrect ou expiré. Merci de réessayer. Si besoin, cliquez sur le lien pour renvoyer un code.";
+$lang['updated'] = "Configuration de double authentification mise à jour.";
+$lang['twofactor_otplogin'] = "Code de vérification";
+$lang['mandatory'] = "Ce wiki requiert l'utilisation d'une double authentification. Vous devez configurer au moins une méthode de double authentification pour continuer.";
+$lang['twofactor_smsnotice'] = "Un mot de passe à usage unique a été envoyé à votre appareil. Si vous ne le recevez pas dans les 2 minutes, vérifiez vos paramètres et renvoyez le code. Si vous ne recevez toujours pas votre code, merci de contacter un administrateur du wiki.";
+$lang['twofactor_failedsmssetup'] = "Le code fourni est incorrect. L'utilisation d'un mot de passe à usage unique n'est pas activé pour ce compte utilisateur.";
+$lang['twofactor_passedsmssetup'] = "L'utilisation d'un mot de passe à usage unique est activée pour ce compte utilisateur.";
+$lang['twofactor_killsms'] = "Désactiver les mots de passe à usage unique pour votre appareil";
+$lang['twofactor_useallmods'] = "Renvoyer un code OTP en utilisant toutes les méthodes configurées";
+$lang['defaultmodule'] = "Méthode par défaut pour recevoir un code";
+$lang['useallotp'] = "*Tout utiliser*";
+$lang['verify_password'] = "Confirmez votre mot de passe";
+$lang['btn_twofactor_profile'] = 'Paramètres de double authentification';
+
+$lang['btn_login'] = "Complétez l'identification";
+$lang['btn_resend'] = "Renvoyer un code";
+$lang['btn_quit'] = "Quitter";
+$lang['btn_return'] = "Retourner sur le wiki";
+
+$lang['menu'] = 'Administration de double authentification';
+$lang['noauth']      = "Impossible d'administrer la double authentification : module d'authentification utilisateur non disponible.";
+$lang['nosupport']   = "Impossible d'administrer la double authentification : gestion des utilisateurs non suportée par le module d'authentification.";
+$lang['badauth']     = "mécanisme d'authentification invalide";     // ne devrait jamais s'afficher !
+$lang['user_id']     = 'Utilisateur';
+$lang['user_pass']   = 'Mot de passe';
+$lang['user_name']   = 'Nom réel';
+$lang['user_mail']   = 'E-mail';
+$lang['reset_selected'] = 'Remettre à zéro la sélection';
+$lang['search']      = 'Recherche';
+$lang['search_prompt'] = 'Lancer la recherche';
+$lang['clear']       = 'Remettre à zéro le filtre de recherche';
+$lang['filter']      = 'Filtre';
+$lang['start']  = 'début';
+$lang['prev']   = 'précédent';
+$lang['next']   = 'suivant';
+$lang['last']   = 'dernier';
+$lang['summary']     = 'Affichage utilisateurs %1$d-%2$d sur %3$d trouvés. %4$d utilisateurs au total.';
+$lang['nonefound']   = 'Aucun utilisateur trouvé. %d utilisateurs au total.';
+$lang['reset_ok']   = '%d utilisateurs remis à zéro';
+$lang['reset_not_self']   = "Vous ne pouvez pas vous remettre à zéro.";
+$lang['no_purpose']   = "L'extension TwoFactor dépend de l'extension Attribute. Sans l'extension Attribute, TwoFactor ne peut pas stocker de données et ne fonctionnera pas.";
