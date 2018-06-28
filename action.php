@@ -357,7 +357,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
     public function get_clearance() {
 		$clearance = isset($_SESSION[DOKU_COOKIE]['twofactor_clearance']) && $_SESSION[DOKU_COOKIE]['twofactor_clearance'] === true;
         if (!$clearance) {
-            $clearance = $this->attribute->get("twofactor","id") === session_id();
+            $clearance = $this->attribute->get("twofactor","id") === DOKU_COOKIE;
             if ($clearance) {
                 $_SESSION[DOKU_COOKIE]['twofactor_clearance'] === true;
             }
@@ -384,7 +384,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		}
         // Storing the session id in case the session cache purges.
         // This appears to not change if using cookie reauthorization.
-        $this->attribute->set("twofactor","id",session_id(), $user);
+        $this->attribute->set("twofactor","id",DOKU_COOKIE, $user);
 		return $_SESSION[DOKU_COOKIE]['twofactor_clearance'] === true;
 	}
     
