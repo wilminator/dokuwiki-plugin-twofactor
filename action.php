@@ -369,13 +369,14 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
      * Flags this session as having passed two factor authentication.
      * @return bool - returns true on successfully granting two factor clearance.
      */
-    private function _grant_clearance($silent = false, $user = null) {
+    private function _grant_clearance($user = null) {        
 		// Purge the otp code as a security measure.
 		$this->attribute->del("twofactor","otp", $user);
 		if (!headers_sent()) {
 			$session = session_status() != PHP_SESSION_NONE;
 			if (!$session) { session_start(); }
-			$_SESSION[DOKU_COOKIE]['twofactor_clearance'] = true;			
+			$_SESSION[DOKU_COOKIE]['twofactor_clearance'] = true;	
+			$_SESSION[DOKU_COOKIE]['twofactor_notify'] = true;	            
 			if (!$session) { session_write_close(); }
 		}
 		else {
@@ -384,16 +385,23 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
         // Storing the session id in case the session cache purges.
         // This appears to not change if using cookie reauthorization.
         $this->attribute->set("twofactor","id",session_id(), $user);
-		$logged_in = $_SESSION[DOKU_COOKIE]['twofactor_clearance']==true;
-        if ($logged_in && $silent !== false) {
-            // Send login notification.
-			$module = $this->attribute->exists("twofactor","defaultmod") ? $this->attribute->get("twofactor","defaultmod") : null;
-            $subject = $this->getConf('loginsubject');
-            $date = date(DATE_RFC2822);
-            $message = str_replace('$date', $date, $this->getConf('logincontent'));
-            $this->_send_message($subject, $message, $module);
-        }
-        return $logged_in;
+		return $_SESSION[DOKU_COOKIE]['twofactor_clearance'] === true;
+	}
+    
+    /**
+     * Sends emails notifying user of successfult 2FA login.
+     * @return mixed - returns true on successfully sending notification to all 
+     *     modules, false if no notifications were sent, or a number indicating 
+     *     the number of modules that suceeded.
+     */
+    private function _send_login_notification() {        
+        // Send login notification.
+        $module = $this->attribute->exists("twofactor", "defaultmod") ? $this->attribute->get("twofactor", "defaultmod") : null;
+        $subject = $this->getConf('loginsubject');
+        $time = date(DATE_RFC2822);
+        $message = str_replace('$time', $time, $this->getConf('logincontent'));
+        $result = $this->_send_message($subject, $message, $module);        
+        return $result;
 	}
 
     /**
@@ -430,7 +438,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 				$result = $mod->processLogin($otp, $user);
 				if ($result) { 
 					// The OTP code was valid.
-					$this->_grant_clearance(false, $user);
+					$this->_grant_clearance($user);
 					return;					
 				}
 			}
@@ -446,7 +454,6 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		$available = count($this->tokenMods) + count($this->otpMods) > 0;
 		if (!$available) {
 			$this->_grant_clearance();
-			global $ACT;
 			$ACT = 'show';
 			return;
 		}		
@@ -473,6 +480,14 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 
 		// Update helper variables here since we are logged in.
 		$this->_setHelperVariables();
+
+        // If set, then send login notification and clear flag.
+        if ($_SESSION[DOKU_COOKIE]['twofactor_notify'] == true){
+            $result = $this->_send_login_notification();
+            if ($result !== false) {
+                unset($_SESSION[DOKU_COOKIE]['twofactor_notify']);
+            }
+        }
 
 		if ($ACT == 'twofactor_login') {
 			$this->_process_otp($event, $param);
@@ -597,9 +612,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 				case 'verified':
 					// Remove used OTP.
 					$this->attribute->del("twofactor","otp");
-					msg($mod->getLang('passedsetup'), 1);
-					// The OTP was valid.  Clear the login so the user can continue unbothered.
-					$this->_grant_clearance(true);						
+					msg($mod->getLang('passedsetup'), 1);										
 					// Reset helper variables.
 					$this->_setHelperVariables();
 					break;
