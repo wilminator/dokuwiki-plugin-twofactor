@@ -17,20 +17,6 @@ abstract class Twofactor_Auth_Module extends DokuWiki_Plugin {
 	}
 	
     /**
-     * return some info
-     */
-    public function getInfo() {
-        return array(
-            'author' => 'Mike Wilmes',
-            'email'  => 'mwilmes@avc.edu',
-            'date'   => '2018-06-21',
-            'name'   => 'Twofactor Auth Plugin',
-            'desc'   => 'Template object used to create Twofactor Authentication modules.',
-            'url'    => 'http://www.dokuwiki.org/plugin:twofactor',
-        );
-    }
-
-    /**
      * Return info about supported methods in this Helper Plugin
      *
      * @return array of public methods
@@ -141,7 +127,7 @@ abstract class Twofactor_Auth_Module extends DokuWiki_Plugin {
 	 * that someone has logged in using their account.
 	 * @return bool - True if the message was sucecssfully transmitted.
 	 */
-	public function transmitMessage($message, $force = false) { return false; }
+	public function transmitMessage($subject, $message, $force = false) { return false; }
 
 	/**
 	 * This is called to validate the code provided.  The default is to see if 

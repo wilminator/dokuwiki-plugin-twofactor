@@ -57,19 +57,6 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		$this->success = (!$requireAttribute || ($this->attribute && $this->attribute->success)) && count($this->modules) > 0;
 		}
 	
-	/**
-	 * return some info
-	 */
-	public function getInfo(){
-		return array(
-            'author' => 'Mike Wilmes',
-            'email'  => 'mwilmes@wilminator.com',
-            'date'   => '2018-06-26',
-            'name'   => 'TwoFactor Plugin',
-            'desc'   => 'This plugin provides for two factor authentication using extensible modules.',
-            'url'    => 'http://www.dokuwiki.org/plugin:twofactor',
-		);
-	}
 
     /**
      * Registers the event handlers.
@@ -165,6 +152,10 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			$items[] = form_makeCheckboxField('optinout', '1', $this->getLang('twofactor_optin'), '', 'block', $value=='in'?array('checked'=>'checked'):array());
 			
 		}
+        if ($this->getConf('loginnotice') === 'user') {
+            $loginnotice = $this->attribute ? $this->attribute->get("twofactor","loginnotice") : false;
+            $items[] = form_makeCheckboxField('loginnotice', '1', $this->getLang('twofactor_notify'), '', 'block', $loginnotice===true?array('checked'=>'checked'):array());
+        }
 		if ($optstate == 'in') {
 			// If there is more than one choice, have the user select the default.
 			if (count($this->otpMods) > 1) {
@@ -349,7 +340,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		if (!headers_sent()) {
 			$session = session_status() != PHP_SESSION_NONE;
 			if (!$session) { session_start(); }
-			//$_SESSION[DOKU_COOKIE]['twofactor_clearance'] = false;
+			$_SESSION[DOKU_COOKIE]['twofactor_clearance'] = false;
 			unset($_SESSION[DOKU_COOKIE]['twofactor_clearance']);
 			if (!$session) { session_write_close(); }
 		}
@@ -378,12 +369,9 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
      * Flags this session as having passed two factor authentication.
      * @return bool - returns true on successfully granting two factor clearance.
      */
-    private function _grant_clearance() {
+    private function _grant_clearance($silent = false, $user = null) {
 		// Purge the otp code as a security measure.
-		$this->attribute->del("twofactor","otp");
-        // Storing the session id in case the session cache purges.
-        // This appears to not change if using cookie reauthorization.
-        $this->attribute->set("twofactor","id",session_id());
+		$this->attribute->del("twofactor","otp", $user);
 		if (!headers_sent()) {
 			$session = session_status() != PHP_SESSION_NONE;
 			if (!$session) { session_start(); }
@@ -393,7 +381,19 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		else {
 			msg("Error! You have not been logged in!!!", -1);
 		}
-		return $_SESSION[DOKU_COOKIE]['twofactor_clearance']==true;
+        // Storing the session id in case the session cache purges.
+        // This appears to not change if using cookie reauthorization.
+        $this->attribute->set("twofactor","id",session_id(), $user);
+		$logged_in = $_SESSION[DOKU_COOKIE]['twofactor_clearance']==true;
+        if ($logged_in && $silent !== false) {
+            // Send login notification.
+			$module = $this->attribute->exists("twofactor","defaultmod") ? $this->attribute->get("twofactor","defaultmod") : null;
+            $subject = $this->getConf('loginsubject');
+            $date = date(DATE_RFC2822);
+            $message = str_replace('$date', $date, $this->getConf('logincontent'));
+            $this->_send_message($subject, $message, $module);
+        }
+        return $logged_in;
 	}
 
     /**
@@ -430,7 +430,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 				$result = $mod->processLogin($otp, $user);
 				if ($result) { 
 					// The OTP code was valid.
-					$this->_grant_clearance();
+					$this->_grant_clearance(false, $user);
 					return;					
 				}
 			}
@@ -556,19 +556,36 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			}
 		}
 
+		// Process notifications.
+		if ($this->getConf("loginnotice") == 'user') {
+			$oldloginnotice = $this->attribute->get("twofactor","loginnotice");
+			$loginnotice = $INPUT->bool('loginnotice', false);
+			if ($oldloginnotice != $loginnotice) {
+				$this->attribute->set("twofactor","loginnotice", $loginnotice);
+				$changed = true;
+			}
+		}
+
 		// Process default module.
 		$defaultmodule = $INPUT->str('default_module', '');
 		if ($defaultmodule) {
-			$useableMods = array();
-			foreach($this->modules as $name=>$mod) {
-				if(!$mod->canAuthLogin() && $mod->canUse()) { 
-					$useableMods[$mod->getLang("name")] = $mod; 
-				}
-			}
-			if (array_key_exists($defaultmodule, $useableMods)) {
-				$this->attribute->set("twofactor", "defaultmod", $defaultmodule);
-				$changed = true;
-			}
+            if ($defaultmodule === $this->getLang('useallotp')) {
+                // Set to use ALL OTP channels.
+                $this->attribute->set("twofactor", "defaultmod", null);
+                $changed = true;
+            }
+            else {
+                $useableMods = array();
+                foreach($this->modules as $name=>$mod) {
+                    if(!$mod->canAuthLogin() && $mod->canUse()) { 
+                        $useableMods[$mod->getLang("name")] = $mod; 
+                    }
+                }
+                if (array_key_exists($defaultmodule, $useableMods)) {
+                    $this->attribute->set("twofactor", "defaultmod", $defaultmodule);
+                    $changed = true;
+                }
+            }
 		}
 		// Update module settings.
 		$sendotp = null;
@@ -582,7 +599,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 					$this->attribute->del("twofactor","otp");
 					msg($mod->getLang('passedsetup'), 1);
 					// The OTP was valid.  Clear the login so the user can continue unbothered.
-					$this->_grant_clearance();						
+					$this->_grant_clearance(true);						
 					// Reset helper variables.
 					$this->_setHelperVariables();
 					break;
@@ -657,16 +674,20 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Transmits a One-Time Password (OTP) using configured modules.
+     * Sends a message using configured modules.
      * If $module is set to a specific instance, that instance will be used to 
-	 * send the OTP. If not supplied or null, then all configured modules will 
-	 * be used to send the OTP. $module can allso be an array of selected 
-	 * modules.
-     * @return mixed - true if successfull to all attempted tramsmission 
+	 * send the message. If not supplied or null, then all configured modules 
+     * will be used to send the message. $module can also be an array of 
+     * selected modules.
+     * If $force is true, then will try to send the message even if the module
+     * has not been validated.
+     * @return array(array, mixed) - The first item in the array is an array 
+     *     of all modules that the message was successfully sent by.  The 
+     *     second item is true if successfull to all attempted tramsmission 
 	 *     modules, false if all failed, and a number of how many successes 
 	 *     if only some modules failed.
      */
-    private function _send_otp($module = null,$force = false) {
+    private function _send_message($subject, $message, $module = null,$force = false) {
 		if ($module === null) {			
 			$module = $this->otpMods;
 		}
@@ -682,34 +703,55 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			$modname = null;
 		}
 		
-		// Generate the OTP code.
-		$characters = '0123456789';
-		$otp = '';
-		for ($index = 0; $index < $this->getConf('otplength'); ++$index) {
-			$otp .= $characters[rand(0, strlen($characters) - 1)];
-		}
-		// Create the message.
-		$message = str_replace('$otp', $otp, $this->getConf('otpcontent'));
-		// Pick the delivery method.
+		// Attempt to deliver messages.
 		$success = 0;
 		$modname = array();
 		foreach($module as $mod) {
 			if ($mod->canTransmitMessage()) {
-				if ($mod->transmitMessage($message, $force)) {
+				if ($mod->transmitMessage($subject, $message, $force)) {
 					$success += 1;
 					$modname[] = get_class($mod);
 				}				
 			}
 		}
 		
+		return array($modname, $success == 0 ? false : ($success == count($module) ? true : $success));
+	}
+    /**
+     * Transmits a One-Time Password (OTP) using configured modules.
+     * If $module is set to a specific instance, that instance will be used to 
+	 * send the OTP. If not supplied or null, then all configured modules will 
+	 * be used to send the OTP. $module can also be an array of selected 
+	 * modules.
+     * If $force is true, then will try to send the message even if the module
+     * has not been validated.
+     * @return mixed - true if successfull to all attempted tramsmission 
+	 *     modules, false if all failed, and a number of how many successes 
+	 *     if only some modules failed.
+     */
+    private function _send_otp($module = null,$force = false) {
+		// Generate the OTP code.
+		$characters = '0123456789';
+		$otp = '';
+		for ($index = 0; $index < $this->getConf('otplength'); ++$index) {
+			$otp .= $characters[rand(0, strlen($characters) - 1)];
+		}
+		// Create the subject.
+		$subject = $this->getConf('otpsubject');
+		// Create the message.
+		$message = str_replace('$otp', $otp, $this->getConf('otpcontent'));
+        
+        // Attempt to deliver the message.
+        list($modname, $result) = $this->_send_message($subject, $message, $module, $force);
+		
 		// If partially successful, store the OTP code and the timestamp the OTP expires at.		
-		if ($success > 0) {			
+		if ($result) {			
 			$otpData = array($otp, time() + $this->getConf('sentexpiry') * 60, $modname);
 			if (!$this->attribute->set("twofactor","otp", $otpData)){
 				msg("Unable to record OTP for later use.", -1);
 			}
 		}
-		return $success == 0 ? false : ($success == count($module) ? true : $success);
+		return $result;
 	}
 	
     /**

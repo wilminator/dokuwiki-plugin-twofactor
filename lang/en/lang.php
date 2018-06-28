@@ -1,28 +1,33 @@
 <?php
-$lang['twofactor_login'] = "Two Factor Authentication Token<br />(leave blank if not using)<br />";
+# User menu text
+$lang['btn_twofactor_profile'] = 'Two Factor Settings';
+
+# Two Factor profile header and settings
+$lang['settings'] = "Two Factor Settings";
 $lang['twofactor_optin'] = "Use two factor authentication";
-$lang['phone'] = "Cellphone Number";
-$lang['twofactor_provider'] = "Cell Provider";
-$lang['mustusetoken'] = "This wiki requires the use of a token provider such as Google Authenticator to login.";
-$lang['twofactor_invalidotp'] = "The code supplied is incorrect or expired.  Please try again. If needed, click the link to resend your code.";
-$lang['updated'] = "Two factor configuration updated.";
-$lang['twofactor_otplogin'] = "Verification Code";
-$lang['mandatory'] = "This wiki requires the use of two factor authentication.  You must configure at least one form of two factor authentication to continue.";
-$lang['twofactor_smsnotice'] = "A verification one-time password has been sent to your device.  If you do not receive it within 2 minutes, verify your settings and resend the code.  If you still do not get your code, please contact a wiki administrator.";
-$lang['twofactor_failedsmssetup'] = "The code provided is incorrect.  Use of one-time password is not enabled for this account.";
-$lang['twofactor_passedsmssetup'] = "Use of one-time password is now enabled for this account.";
-$lang['twofactor_killsms'] = "Disable one-time passwords to your device";
-$lang['twofactor_useallmods'] = "Resend OTP using all configured options";
+$lang['twofactor_notify'] = "Send notification upon sucessful login to default device";
 $lang['defaultmodule'] = "Default way to receive a code";
 $lang['useallotp'] = "*Use All*";
 $lang['verify_password'] = "Confirm your password";
-$lang['btn_twofactor_profile'] = 'Twofactor Settings';
-
-$lang['btn_login'] = "Complete Login";
-$lang['btn_resend'] = "Resend Code";
 $lang['btn_quit'] = "Quit";
 $lang['btn_return'] = "Return to content";
 
+# Messages displayed by menu
+$lang['updated'] = "Two factor configuration updated.";
+$lang['mandatory'] = "This wiki requires the use of two factor authentication.  You must configure at least one form of two factor authentication to continue.";
+
+# Text used at login
+$lang['twofactor_login'] = "Two Factor Authentication Token<br />(leave blank if not using)<br />";
+$lang['mustusetoken'] = "This wiki requires the use of a token provider such as Google Authenticator to login.";
+
+# Text used at OTP login screen
+$lang['twofactor_otplogin'] = "Verification Code";
+$lang['twofactor_useallmods'] = "Resend OTP using all configured options";
+$lang['twofactor_invalidotp'] = "The code supplied is incorrect or expired.  Please try again. If needed, click the link to resend your code.";
+$lang['btn_login'] = "Complete Login";
+$lang['btn_resend'] = "Resend Code";
+
+# Administrative text
 $lang['menu'] = 'TwoFactor Admin';
 $lang['noauth']      = 'Unable to administer TwoFactor: User authentication module not available.';
 $lang['nosupport']   = 'Unable to administer TwoFactor: User management not supported via authentication module.';
