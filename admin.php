@@ -17,8 +17,7 @@ if(!defined('DOKU_TWOFACTOR_PLUGIN_IMAGES')) define('DOKU_TWOFACTOR_PLUGIN_IMAGE
  * need to inherit from this class
  */
 class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
-    protected $_auth = null;        // auth object
-    protected $_user_list = array();     // number of users with attributes
+    protected $_user_list = array();     // list of users with attributes
     protected $_filter = array();   // user selection filter(s)
     protected $_start = 0;          // index of first user to be displayed
     protected $_last = 0;           // index of the last user to be displayed
@@ -31,15 +30,13 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
      */
     public function __construct(){
 		global $auth;
+
 		$this->setupLocale();
+
         if (!isset($auth)) {
             $this->_disabled = $this->lang['noauth'];
-        } else if (!$auth->canDo('getUsers')) {
-            $this->_disabled = $this->lang['nosupport'];
-        } else {
-            // we're good to go
-            $this->_auth = & $auth;
         }
+
 		$requireAttribute = $this->getConf("enable") === 1;
 		$this->attribute = $requireAttribute ? $this->loadHelper('attribute', 'TwoFactor depends on the Attribute plugin, but the Attribute plugin is not installed!') : null;		
 		
@@ -172,7 +169,7 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
             return false;
         }
         
-        if ($this->disabled !== '') {
+        if ($this->disabled) {
             msg($this->_disabled, -1);
             return true;
         }
@@ -223,8 +220,7 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
                  * @var string $pass
                  * @var string $mail
                  * @var array  $grps
-                 */
-                $groups = join(', ',$grps);
+                 */                
                 ptln("    <tr class=\"user_info\">");
                 ptln("      <td class=\"centeralign\"><input type=\"checkbox\" name=\"delete[".hsc($user)."]\" ".$delete_disable." /></td>");
                 if ($editable) {
@@ -374,6 +370,7 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
         } else {
             $part1 = str_replace('%d', $count, $this->lang['reset_ok']);
             $part2 = str_replace('%d', (count($selected)-$count), $this->lang['reset_fail']);
+            // Output results.
             msg("$part1, $part2",-1);
         }
 		
@@ -384,9 +381,15 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
     }
 	
 	protected function _retrieveFilteredUsers($filter = array()) {
+        global $auth;
 		$users = array();
+        $noUsers = is_null($auth) || !$auth->canDo('getUsers') || true;
 		foreach ($this->_user_list as $user) {
-			$userdata = $this->_auth->getUserData($user);
+            if ($noUsers) {
+                $userdata = array('user'=>$user, 'name'=>$user, 'mail'=>null);
+            } else {
+                $userdata = $auth->getUserData($user);
+            }
 			$include = true;
 			foreach ($filter as $key=>$value) {
 				$include &= strstr($userdata[$key], $value);
@@ -417,18 +420,9 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
         global $INPUT;
 
         $user = array();
-        $user[0] = ($clean) ? $auth->cleanUser($INPUT->str('userid')) : $INPUT->str('userid');
-        $user[1] = $INPUT->str('userpass');
-        $user[2] = $INPUT->str('username');
-        $user[3] = $INPUT->str('usermail');
-        $user[4] = explode(',',$INPUT->str('usergroups'));
-        $user[5] = $INPUT->str('userpass2');                // repeated password for confirmation
-
-        $user[4] = array_map('trim',$user[4]);
-        if($clean) $user[4] = array_map(array($auth,'cleanGroup'),$user[4]);
-        $user[4] = array_filter($user[4]);
-        $user[4] = array_unique($user[4]);
-        if(!count($user[4])) $user[4] = null;
+        $user[] = $INPUT->str('userid');
+        $user[] = $INPUT->str('username');
+        $user[] = $INPUT->str('usermail');
 
         return $user;
     }
@@ -443,7 +437,7 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
         $this->_filter = array();
 
         if ($op == 'new') {
-            list($user,/* $pass */,$name,$mail,$grps) = $this->_retrieveUser(false);
+            list($user,$name,$mail) = $this->_retrieveUser();
 
             if (!empty($user)) $this->_filter['user'] = $user;
             if (!empty($name)) $this->_filter['name'] = $name;
