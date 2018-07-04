@@ -145,17 +145,20 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		// Add the checkbox to opt in and out, only if optinout is not mandatory.
 		$items = array();
 		if ($optinout != 'mandatory') {
-			$value = $optstate;
-			if (!$this->attribute || !$value) {  // If there is no personal setting for optin, the default is based on the wiki default.
-				$value = $this->getConf("optinout") == 'optout';
+			$optinvalue = $optstate;
+			if (!$this->attribute || !$optinvalue) {  // If there is no personal setting for optin, the default is based on the wiki default.
+				$optinvalue = $this->getConf("optinout") == 'optout';
 			}
-			$items[] = form_makeCheckboxField('optinout', '1', $this->getLang('twofactor_optin'), '', 'block', $value=='in'?array('checked'=>'checked'):array());
-			
+			$items[] = form_makeCheckboxField('optinout', '1', $this->getLang('twofactor_optin'), '', 'block', $optinvalue=='in'?array('checked'=>'checked'):array());			
 		}
-        if ($this->getConf('loginnotice') === 'user') {
+        
+        // Add the notification checkbox if appropriate.
+        if ($this->getConf('loginnotice') === 'user' && $optstate === 'in') {
             $loginnotice = $this->attribute ? $this->attribute->get("twofactor","loginnotice") : false;
             $items[] = form_makeCheckboxField('loginnotice', '1', $this->getLang('twofactor_notify'), '', 'block', $loginnotice===true?array('checked'=>'checked'):array());
         }
+        
+        // Select a notification provider.
 		if ($optstate == 'in') {
 			// If there is more than one choice, have the user select the default.
 			if (count($this->otpMods) > 1) {
@@ -382,7 +385,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		else {
 			msg("Error! You have not been logged in!!!", -1);
 		}
-        // Storing the session id in case the session cache purges.
+        // Storing the DOKU_COOKIE in case the session cache purges.
         // This appears to not change if using cookie reauthorization.
         $this->attribute->set("twofactor","id",DOKU_COOKIE, $user);
 		return $_SESSION[DOKU_COOKIE]['twofactor_clearance'] === true;
