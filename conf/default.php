@@ -9,4 +9,7 @@ $conf["sentexpiry"] = 5;
 $conf["loginnotice"] = 'user';
 $conf["loginsubject"] = 'Login Successful';
 $conf["logincontent"] = 'Your account was logged into at $time.';
+$conf["refreshexpiry"] = 240;
+$conf["logging_level"] = '0';
+$conf["logging_path"] = '2fa_audit.txt';
 

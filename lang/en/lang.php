@@ -15,6 +15,7 @@ $lang['btn_return'] = "Return to content";
 # Messages displayed by menu
 $lang['updated'] = "Two factor configuration updated.";
 $lang['mandatory'] = "This wiki requires the use of two factor authentication.  You must configure at least one form of two factor authentication to continue.";
+$lang['optout_notice'] = "This wiki has the ability to use two factor authentication.  If you do not want to use this option, please uncheck the first box below, supply your password at the bottom, and save your settings.";
 
 # Text used at login
 $lang['twofactor_login'] = "Two Factor Authentication Token<br />(leave blank if not using)<br />";
@@ -23,9 +24,27 @@ $lang['mustusetoken'] = "This wiki requires the use of a token provider such as 
 # Text used at OTP login screen
 $lang['twofactor_otplogin'] = "Verification Code";
 $lang['twofactor_useallmods'] = "Resend OTP using all configured options";
-$lang['twofactor_invalidotp'] = "The code supplied is incorrect or expired.  Please try again. If needed, click the link to resend your code.";
+$lang['twofactor_invalidotp'] = "The code supplied is incorrect or expired.  Please try again. If needed, click the button to resend your code.";
 $lang['btn_login'] = "Complete Login";
 $lang['btn_resend'] = "Resend Code";
+
+# LogLog text
+# 'logged in, %s'
+$lang['requires_otp'] = "requires OTP code";
+# 'logged in, %s'
+$lang['2fa_mandatory'] = "redirected to 2FA for mandatory setup";
+# 'logged in %s'
+$lang['token_ok'] = "using correct token";
+# 'failed %s'
+$lang['no_tokens'] = "token login, no tokens configured";
+# 'failed %s'
+$lang['token_mismatch'] = "token login, no token match";
+# 'logged off, %s'
+$lang['quit_otp'] = "quit OTP screen";
+# 'logged in %s'
+$lang['otp_ok'] = "using OTP screen";
+# 'failed OTP login, %s'
+$lang['otp_mismatch'] = "bad code";
 
 # Administrative text
 $lang['menu'] = 'TwoFactor Admin';
