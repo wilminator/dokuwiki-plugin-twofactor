@@ -111,7 +111,8 @@ abstract class Twofactor_Auth_Module extends DokuWiki_Plugin {
 	 *     the string 'verified' if the module was successfully verified,
 	 *     the string 'failed' if the module failed verification,
 	 *	   the string 'otp' if the module is requesting a one-time password
-	 *     for verification.
+	 *     for verification,
+     *     the string 'deleted' if the module was unenrolled.
 	 */
     public function processProfileForm() { return null; }    
     
@@ -137,8 +138,7 @@ abstract class Twofactor_Auth_Module extends DokuWiki_Plugin {
 	 */
 	public function processLogin($code, $user = null) {
 		$twofactor = plugin_load('action', 'twofactor');
-		$otpQuery = $twofactor->get_otp_code();
-		//msg(serialize(array($otpQuery,$code, $user)));
+		$otpQuery = $twofactor->get_otp_code();		
 		if (!$otpQuery) { return false; }
 		list($otp, $modname) = $otpQuery;
 		return ($code == $otp && $code != '' && (count($modname) == 0 || in_array(get_called_class(), $modname)));
