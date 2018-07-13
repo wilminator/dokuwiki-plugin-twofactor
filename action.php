@@ -916,10 +916,10 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		}
 		$this->otpMods = $otpMods;
 	}
-    public const LOGGING_AUDIT = 1;     // Audit records 2FA login and logout activity.
-    public const LOGGING_AUDITPLUS = 2; // Audit+ also records sending of notifications.
-    public const LOGGING_DEBUG = 3;     // Debug provides detailed workflow data.
-    public const LOGGING_DEBUGPLUS = 4; // Debug+ also includes variables passed to and from functions.
+    const LOGGING_AUDIT = 1;     // Audit records 2FA login and logout activity.
+    const LOGGING_AUDITPLUS = 2; // Audit+ also records sending of notifications.
+    const LOGGING_DEBUG = 3;     // Debug provides detailed workflow data.
+    const LOGGING_DEBUGPLUS = 4; // Debug+ also includes variables passed to and from functions.
     public function log(string $message, int $level = 1) {
         // If the log level requested is below audit or greater than what is permitted in the configuration, then exit.
         if ($level < self::LOGGING_AUDIT || $level > $this->getConf('logging_level')) { return; }

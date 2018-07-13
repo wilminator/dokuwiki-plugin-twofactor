@@ -1,7 +1,7 @@
 base   twofactor
 author Michael Wilmes
 email  michael.wilmes@gmail.com
-date   2018-07-12
+date   2018-07-13
 name   Two Factor Authentication - Core Plugin
 desc   Creates a two factor authentication mechanism
 url    https://www.dokuwiki.org/plugin:twofactor
