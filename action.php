@@ -920,7 +920,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
     const LOGGING_AUDITPLUS = 2; // Audit+ also records sending of notifications.
     const LOGGING_DEBUG = 3;     // Debug provides detailed workflow data.
     const LOGGING_DEBUGPLUS = 4; // Debug+ also includes variables passed to and from functions.
-    public function log(string $message, int $level = 1) {
+    public function log($message, $level = 1) {
         // If the log level requested is below audit or greater than what is permitted in the configuration, then exit.
         if ($level < self::LOGGING_AUDIT || $level > $this->getConf('logging_level')) { return; }
         global $conf;
