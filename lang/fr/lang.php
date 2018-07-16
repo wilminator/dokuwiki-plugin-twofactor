@@ -16,6 +16,7 @@ $lang['btn_return'] = "Retourner sur le wiki";
 $lang['updated'] = "Configuration de double authentification mise à jour.";
 $lang['mandatory'] = "Ce wiki requiert l'utilisation d'une double authentification. Vous devez configurer au moins une méthode de double authentification pour continuer.";
 $lang['optout_notice'] = "This wiki has the ability to use two factor authentication.  If you do not want to use this option, please uncheck the first box below, supply your password at the bottom, and save your settings.";
+$lang['not_configured_notice'] = "You have enabled two factor authentication, but no providers are properly configured. Please complete the configuration of at least one provider or disable two factor authentication.";
 
 # Text used at login
 $lang['twofactor_login'] = "Jeton d'authentification 2FA <br />(laissez vide si inutilisé)<br />";

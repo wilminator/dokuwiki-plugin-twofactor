@@ -131,8 +131,11 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		if (!$available && $optinout == 'mandatory') {
 			msg($this->getLang('mandatory'), -1);
 		}
-        if ($this->attribute->get("twofactor", "state")=='' && $optinout =='optout') {
+        elseif ($this->attribute->get("twofactor", "state")=='' && $optinout =='optout') {
 			msg($this->getLang('optout_notice'), 2);
+        }
+        elseif ($this->attribute->get("twofactor", "state")=='in' && count($this->tokenMods)==0 && count($this->otpMods)==0) {
+			msg($this->getLang('not_configured_notice'), 2);
         }
 		global $USERINFO, $lang, $conf;
 		$form = new Doku_Form(array('id' => 'twofactor_setup'));
@@ -144,8 +147,8 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			}
 			$items[] = form_makeCheckboxField('optinout', '1', $this->getLang('twofactor_optin'), '', 'block', $optinvalue=='in'?array('checked'=>'checked'):array());
 		}
-        // Add the notification checkbox if appropriate.
-        if ($this->getConf('loginnotice') === 'user' && $optinvalue === 'in' && count($this->otpMods) > 0) {
+        // Add the notification checkbox if appropriate.        
+        if ($this->getConf('loginnotice') == 'user' && $optinvalue == 'in' && count($this->otpMods) > 0) {
             $loginnotice = $this->attribute ? $this->attribute->get("twofactor", "loginnotice") : false;
             $items[] = form_makeCheckboxField('loginnotice', '1', $this->getLang('twofactor_notify'), '', 'block', $loginnotice===true?array('checked'=>'checked'):array());
         }
@@ -277,32 +280,29 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
             }
 			return;
 		}
+        
 		// See if this user has any OTP methods configured.
 		$available = count($this->tokenMods) + count($this->otpMods) > 0;
         // Check if this user needs to login with 2FA.
+        // Wiki mandatory is on if user is logged in and config is mandatory
         $mandatory = $this->getConf("optinout") == 'mandatory' && $INPUT->server->str('REMOTE_USER','');
+        // User is NOT OPTED OUT if the optin setting is undefined and the wiki config is optout.
         $not_opted_out = $this->attribute->get("twofactor", "state") == '' && $this->getConf("optinout") == 'optout';
-        $must_login = $mandatory || $this->attribute->get("twofactor", "state") == 'in';
+        // The user must login if wiki mandatory is on or if the user is logged in and user is opt in.
+        $must_login = $mandatory || ($this->attribute->get("twofactor", "state") == 'in' && $INPUT->server->str('REMOTE_USER',''));        
+        $has_clearance = $this->get_clearance() === true;
         $this->log('twofactor_action_process_handler: USERINFO: '.print_r($USERINFO, true),self::LOGGING_DEBUGPLUS);
-        // Enforce login if user must login.
-        if (!$this->get_clearance() && $must_login) {
-            if (!in_array($event->data, array('login', 'twofactor_login'))) {
-                // If not logged in then force to the login page.
-                $event->preventDefault();
-                $event->stopPropagation();
-                $event->result = false;
-                // If there are OTP generators, then use them.
-                send_redirect(wl($ID, array('do'=>'twofactor_login'), true, '&'));
-                return;
-            }
-            // Otherwise go to where we are told.
-            return;
-        }
+
         // Possible combination skipped- not logged in and 2FA is not requred for user {optout conf or (no selection and optin conf)}.
-        // Check to see if updating twofactor is required.
-        if (($mandatory || $not_opted_out) && !$available) {
-            // We need to be going to the twofactor profile.
-            // If we were setup, we would not be here in the code.
+        
+        // Check to see if updating twofactor is required.        
+        // This happens if the wiki is mandatory, the user has not opted out of an opt-out wiki, or if the user has opted in, and if there are no available mods for use.
+        // The user cannot have available mods without setting them up, and cannot unless the wiki is mandatory or the user has opted in.        
+        if (($must_login || $not_opted_out) && !$available) {
+            // If the user has not been granted access at this point, do so or they will get booted after setting up 2FA.
+            if (!$has_clearance) { $this->_grant_clearance(); }
+            // We need to go to the twofactor profile.
+            // If we were setup properly, we would not be here in the code.
             $event->preventDefault();
             $event->stopPropagation();
             $event->result = false;
@@ -312,9 +312,30 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
             send_redirect(wl($ID, array('do'=>'twofactor_profile'), true, '&'));
             return;
         }
-		// Otherwise everything is good!
-		return;
+
+        // Now validate login before proceeding.
+        if (!$has_clearance) {
+            if ($must_login) {
+                if (!in_array($event->data, array('login', 'twofactor_login'))) {
+                    // If not logged in then force to the login page.
+                    $event->preventDefault();
+                    $event->stopPropagation();
+                    $event->result = false;
+                    // If there are OTP generators, then use them.
+                    send_redirect(wl($ID, array('do'=>'twofactor_login'), true, '&'));
+                    return;
+                }
+                // Otherwise go to where we are told.
+                return;
+            }
+            // The user is not set with 2FA and is not required to.
+            // Grant clearance and continue.
+            $this->_grant_clearance();                    
+        }
+        // Otherwise everything is good!
+        return;
 	}
+
 	public function twofactor_handle_unknown_action(&$event, $param) {
 		$this->log('twofactor_handle_unknown_action: start', self::LOGGING_DEBUG);
 		if ($event->data == 'twofactor_profile') {
@@ -461,7 +482,12 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			$session = session_status() != PHP_SESSION_NONE;
 			if (!$session) { session_start(); }
 			$_SESSION[DOKU_COOKIE]['twofactor_clearance'] = time();
-			$_SESSION[DOKU_COOKIE]['twofactor_notify'] = true;
+            // Set the notify flag if set or required by wiki.   
+            $this->log('_grant_clearance: conf:'.$this->getConf('loginnotice').' user:'.($this->attribute->get("twofactor", "loginnotice", $user)===true?'true':'false'), self::LOGGING_DEBUG);            
+            $send_wanted = $this->getConf('loginnotice') == 'always' || ($this->getConf('loginnotice') == 'user' && $this->attribute->get("twofactor", "loginnotice", $user) == true);
+            if ($send_wanted) {
+                $_SESSION[DOKU_COOKIE]['twofactor_notify'] = true;
+            }
 			if (!$session) { session_write_close(); }
 		}
 		else {
@@ -590,8 +616,9 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		$this->_setHelperVariables();
         // If set, then send login notification and clear flag.
         if ($_SESSION[DOKU_COOKIE]['twofactor_notify'] == true){
-            $result = $this->_send_login_notification();
-            if ($result !== false) {
+            // Set the clear flag if no messages can be sent or if the result is not false.
+            $clear = count($this_>otpMods) > 0 || $this->_send_login_notification()!== false;            
+            if ($clear) {
                 unset($_SESSION[DOKU_COOKIE]['twofactor_notify']);
             }
         }
@@ -893,27 +920,34 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 	}
 	private function _setHelperVariables($user = null) {
         $this->log("_setHelperVariables: start", self::LOGGING_DEBUGPLUS);
-		// List all working token modules (GA, RSA, etc.).
-		$tokenMods = array();
-		foreach($this->modules as $name=>$mod) {
-			if($mod->canAuthLogin() && $mod->canUse($user)) {
-                $this->log('Can use '.get_class($mod).' for tokens', self::LOGGING_DEBUG);
-				$tokenMods[$mod->getLang("name")] = $mod;
-			} else {
-                $this->log('Can NOT use '.get_class($mod).' for tokens', self::LOGGING_DEBUG);
+        $tokenMods = array();
+        $otpMods = array();
+        $state = $this->attribute->get("twofactor", "state");
+        $optinout = $this->getConf("optinout");
+        $enabled =  $optinout == 'mandatory' || ($state == '' ?  $optinout == 'optin' : $state == 'in');
+        $this->log("_setHelperVariables: ".print_r(array($optinout, $state, $enabled),true), self::LOGGING_DEBUG);
+        // Skip if not enabled for user  
+        if ($enabled) {             
+            // List all working token modules (GA, RSA, etc.).		
+            foreach($this->modules as $name=>$mod) {
+                if($mod->canAuthLogin() && $mod->canUse($user)) {
+                    $this->log('Can use '.get_class($mod).' for tokens', self::LOGGING_DEBUG);
+                    $tokenMods[$mod->getLang("name")] = $mod;
+                } else {
+                    $this->log('Can NOT use '.get_class($mod).' for tokens', self::LOGGING_DEBUG);
+                }
             }
-		}
+            // List all working OTP modules (SMS, Twilio, etc.).		
+            foreach($this->modules as $name=>$mod) {
+                if(!$mod->canAuthLogin() && $mod->canUse($user)) {
+                    $this->log('Can use '.get_class($mod).' for otp', self::LOGGING_DEBUG);
+                    $otpMods[$mod->getLang("name")] = $mod;
+                } else {
+                    $this->log('Can NOT use '.get_class($mod).' for otp', self::LOGGING_DEBUG);
+                }
+            }
+        }
 		$this->tokenMods = $tokenMods;
-		// List all working OTP modules (SMS, Twilio, etc.).
-		$otpMods = array();
-		foreach($this->modules as $name=>$mod) {
-			if(!$mod->canAuthLogin() && $mod->canUse($user)) {
-                $this->log('Can use '.get_class($mod).' for otp', self::LOGGING_DEBUG);
-				$otpMods[$mod->getLang("name")] = $mod;
-			} else {
-                $this->log('Can NOT use '.get_class($mod).' for otp', self::LOGGING_DEBUG);
-            }
-		}
 		$this->otpMods = $otpMods;
 	}
     const LOGGING_AUDIT = 1;     // Audit records 2FA login and logout activity.
