@@ -281,6 +281,12 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			return;
 		}
         
+        // Is the user logged into the wiki?
+        if (!$USERINFO) {
+            // If not logged in, then do nothing.
+            return;
+        }
+        
 		// See if this user has any OTP methods configured.
 		$available = count($this->tokenMods) + count($this->otpMods) > 0;
         // Check if this user needs to login with 2FA.
@@ -476,6 +482,9 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
         global $conf, $INPUT;
         $this->log("_grant_clearance: start", self::LOGGING_DEBUG);
         $this->log('2FA Login: '.$INPUT->server->str("REMOTE_USER",$user), self::LOGGING_AUDIT);
+        if ($INPUT->server->str("REMOTE_USER",$user) == 1) {
+            $this->log("_grant_clearance: start", self::LOGGING_DEBUGPLUS);
+        }
 		// Purge the otp code as a security measure.
 		$this->attribute->del("twofactor", "otp", $user);
 		if (!headers_sent()) {
@@ -769,7 +778,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 			}
 		}
 		// Send OTP if requested.
-		if ($sendotp) {
+		if (is_object($sendotp)) {
 			// Force the message since it will fail the canUse function.
 			if ($this->_send_otp($sendotp, true)) {
 				msg($sendotp->getLang('needsetup'), 1);
@@ -780,6 +789,8 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
 		}
 		// Update change status if changed.
 		if ($changed) {
+            // If there were any changes, update the available tokens accordingly.
+            $this->_setHelperVariables();
 			msg($this->getLang('updated'), 1);
 		}
 		return true;

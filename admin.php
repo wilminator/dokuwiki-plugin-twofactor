@@ -389,6 +389,9 @@ class admin_plugin_twofactor extends DokuWiki_Admin_Plugin {
                 $userdata = array('user'=>$user, 'name'=>$user, 'mail'=>null);
             } else {
                 $userdata = $auth->getUserData($user);
+                if (!is_array($userdata)) {
+                    $userdata = array('user'=>$user, 'name'=>null, 'mail'=>null);
+                }
             }
 			$include = true;
 			foreach ($filter as $key=>$value) {
