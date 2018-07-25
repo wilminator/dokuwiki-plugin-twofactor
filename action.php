@@ -218,7 +218,7 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
             // To support loglog or any other module that hooks login checking for success,
             // Confirm that the user is logged in.  If not, then redirect to twofactor_login
             // and fail the login.
-            if (!$this->get_clearance()){
+            if ($USERINFO && !$this->get_clearance()){
                 // Hijack this event.  We need to resend it after 2FA is done.
                 $event->stopPropagation();
                 // Send loglog an event to show the user logged in but needs OTP code.
