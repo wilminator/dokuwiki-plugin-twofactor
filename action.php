@@ -115,8 +115,8 @@ class action_plugin_twofactor extends DokuWiki_Action_Plugin {
     public function twofactor_login_form(&$event, $param) {
 		$this->log('twofactor_login_form: start', self::LOGGING_DEBUG);
 		$twofa_form = form_makeTextField('otp', '', $this->getLang('twofactor_login'), '', 'block', array('size'=>'50', 'autocomplete'=>'off'));
-        $pos = $event->data->findElementByAttribute('type', 'submit');
-        $event->data->replaceElement($pos-1, $twofa_form);
+        $pos = $event->data->findElementByAttribute('name', 'p');
+        $event->data->insertElement($pos + 1, $twofa_form);
     }
     /**
      * Handles the profile form rendering.  Displays user manageable settings.
